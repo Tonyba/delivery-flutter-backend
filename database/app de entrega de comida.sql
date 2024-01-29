@@ -39,23 +39,27 @@ CREATE TABLE "direcciones_usuario" (
   "updated_at" timestamp(0) NOT NULL
 );
 
-CREATE TABLE "producto" (
+DROP TABLE IF EXISTS productos;
+CREATE TABLE "productos" (
   "id" BIGSERIAL PRIMARY KEY,
   "id_categoria" BIGSERIAL,
   "nombre" varchar(255) NOT NULL,
   "precio" float NOT NULL,
+  "precio_descuento" float,
   "descripcion" text,
-  "imagen" varchar(255) NOT NULL,
+  "imagen" varchar(255),
   "created_at" timestamp(0) NOT NULL,
   "updated_at" timestamp(0) NOT NULL
 );
 
-CREATE TABLE "producto_imagenes" (
+DROP TABLE IF EXISTS productos_imagenes;
+CREATE TABLE "productos_imagenes" (
   "id" BIGSERIAL PRIMARY KEY,
   "producto_id" BIGSERIAL NOT NULL,
   "ruta" varchar(255) UNIQUE NOT NULL
 );
 
+DROP TABLE IF EXISTS categorias;
 CREATE TABLE "categorias" (
   "id" BIGSERIAL PRIMARY KEY,
   "nombre" varchar(255) NOT NULL,
@@ -104,11 +108,11 @@ COMMENT ON COLUMN "pedidos"."estado" IS '
 
 ALTER TABLE "reviews" ADD FOREIGN KEY ("pedido_id") REFERENCES "pedidos" ("id");
 
-ALTER TABLE "usuario" ADD FOREIGN KEY ("id") REFERENCES "reviews" ("usuario_id");
+ALTER TABLE "reviews" ADD FOREIGN KEY ("usuario_id") REFERENCES "usuario" ("id");
 
-ALTER TABLE "producto" ADD FOREIGN KEY ("id") REFERENCES "categorias" ("id");
+ALTER TABLE "productos" ADD FOREIGN KEY ("id_categoria") REFERENCES "categorias" ("id");
 
-ALTER TABLE "producto_imagenes" ADD FOREIGN KEY ("producto_id") REFERENCES "producto" ("id");
+ALTER TABLE "productos_imagenes" ADD FOREIGN KEY ("producto_id") REFERENCES "productos" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE "pedido_producto" ADD FOREIGN KEY ("pedido_id") REFERENCES "pedidos" ("id");
 

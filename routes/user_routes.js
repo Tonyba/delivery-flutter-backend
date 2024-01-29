@@ -1,15 +1,14 @@
-const { getAll, register, login, registerWithImg } = require('../controllers/user_controller');
+const passport = require('passport');
+const { getAll, login, findByid, registerWithImg, updateUser, logout } = require('../controllers/user_controller');
 const { validarCampos } = require('../middlewares/validar-campos')
 const { check } = require('express-validator');
-const multer = require('multer');
-
 const router = require('express').Router();
 
-const upload = multer({
-    storage: multer.memoryStorage()
-});
+const upload = require('../helpers/upload');
 
 router.get('/', getAll);
+router.get('/findById/:id',  passport.authenticate('jwt', {session: false}) ,findByid);
+
 router.post('/register', [
     check('user.*.nombre', 'El nombre es obligatorio').not().isEmpty(),
     check('user.*.apellido', 'El apellido es obligatorio').not().isEmpty(),
@@ -20,15 +19,6 @@ router.post('/register', [
     validarCampos
 ], registerWithImg);
 
-router.put('/update', [
-    check('user.*.nombre', 'El nombre es obligatorio').not().isEmpty(),
-    check('user.*.apellido', 'El apellido es obligatorio').not().isEmpty(),
-    check('user.*.telefono', 'El numero de telefono debe ser valido').isMobilePhone('es-VE'),
-    upload.array('image', 1),
-    validarCampos
-], registerWithImg);
-
-
 router.post('/login', [
     check('correo', 'El correo debe ser valido').isEmail(),
     check('password', 'La contraseña es obligatoria').not().isEmpty(),
@@ -36,5 +26,16 @@ router.post('/login', [
         min: 6
     })
 ], login);
+router.post('/logout', logout);
+
+router.put('/update', [
+    passport.authenticate('jwt', {session: false}),
+    check('user.*.nombre', 'El nombre es obligatorio').not().isEmpty(),
+    check('user.*.apellido', 'El apellido es obligatorio').not().isEmpty(),
+    check('user.*.telefono', 'El numero de telefono debe ser valido').isMobilePhone('es-VE'),
+    upload.array('image', 1),
+    validarCampos
+], updateUser);
+
 
 module.exports = router;

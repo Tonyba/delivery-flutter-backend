@@ -41,9 +41,9 @@ async function register(req, res = response, next) {
 
         await Rol.create(saved.id, 1);
 
-        await User.findByid(
+        await User.findById(
             saved.id, 
-            (_,usuario) => {
+            async (_,usuario)  => {
             const token = jwt.sign(
                     {
                         id: usuario.id,
@@ -55,8 +55,9 @@ async function register(req, res = response, next) {
                     }
                 );
         
-                usuario.session_token = token;
-        
+                usuario.session_token = `JWT ${token}`;
+
+                await User.setToken(usuario.id, usuario.session_token);       
         
                 return res.status(201).json({
                     success: true,
@@ -109,7 +110,7 @@ async function registerWithImg(req, res = response, next) {
 
         await Rol.create(saved.id, 1);
 
-        await User.findByid(
+        await User.findById(
             saved.id, 
             (_,usuario) => {
             const token = jwt.sign(
@@ -149,7 +150,7 @@ async function registerWithImg(req, res = response, next) {
 async function updateUser(req, res = response, next) {
     try {
         const user = JSON.parse(req.body.user);
-        const exist = await User.checkIfPhoneExist(user.telefono);
+        const exist = await User.findByPhone(user.telefono);
         const files = req.files;
 
         if(files.length > 0) {
@@ -161,7 +162,7 @@ async function updateUser(req, res = response, next) {
             }
         }
 
-        if(exist.count === '1' ) {
+        if(exist.telefono !== user.telefono ) {
             return res.status(400).json({
                 success: false,
                 msg: 'Numero de telefono ya existe'
@@ -172,7 +173,7 @@ async function updateUser(req, res = response, next) {
 
         return res.status(201).json({
             success: true,
-            msg: 'Lo datos fueron actualizados'
+            msg: 'Los datos fueron actualizados'
         });
         
     } catch (error) {
@@ -184,6 +185,77 @@ async function updateUser(req, res = response, next) {
     }
 }
 
+async function findByid(req, res) {
+    try {
+
+        const id = req.params.id;
+
+        if(!id) return res.status(400).json({
+            success: false,
+            msg: 'El id es obligatorio'
+        });
+
+        await User.findById(
+            req.params.id, 
+            (_,usuario) => {
+
+                if(!usuario) return res.status(404).json({
+                    success: false,
+                    msg: 'El usuario no existe'
+                });
+   
+                const token = jwt.sign(
+                    {
+                        id: usuario.id,
+                        correo: usuario.correo
+                    },
+                    process.env.JWT_KEY,
+                    {
+                        expiresIn: '24h'
+                    }
+                );
+        
+                usuario.session_token = `JWT ${token}`;
+        
+                return res.status(201).json({
+                    success: true,
+                    usuario
+                });
+        
+            }
+        );
+
+        
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            msg: 'FIND_BY_ID: Server Error'
+        });
+    }
+}
+
+async function logout(req, res) {
+    try {
+        const id = req.body.id;
+
+        if(!id) return res.status(400).json({
+            success: false,
+            msg: 'El id es obligatorio'
+        });
+
+        await User.setToken(id, null);
+
+        return res.status(201).json({
+            success: true,
+            msg: 'La sesion del usuario se ha cerrado correctamente'
+        });
+
+    } catch (error) {
+        console.log(error);
+    }
+}
 
 async function login(req, res= response, next) {
     try {
@@ -231,6 +303,8 @@ async function login(req, res= response, next) {
             roles: usuario.roles
         }
 
+        await User.setToken(data.id, data.session_token);
+
         return res.json({
             success: true,
             usuario: data
@@ -252,5 +326,7 @@ module.exports = {
     register,
     registerWithImg,
     login,
-    updateUser
+    findByid,
+    updateUser,
+    logout
 }

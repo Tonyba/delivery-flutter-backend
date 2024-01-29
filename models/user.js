@@ -55,11 +55,11 @@ User.create = (user) => {
 User.update = (user) => {
     const sql = `
         UPDATE
-            usuario
+            ${table_name}
         SET
             nombre = $2,
             apellido = $3,
-            telefono = $4
+            telefono = $4,
             imagen = $5,
             updated_at = $6
         WHERE 
@@ -69,6 +69,7 @@ User.update = (user) => {
     return db.none(sql, [
         user.id,
         user.nombre,
+        user.apellido,
         user.telefono,
         user.imagen,
         new Date()
@@ -92,10 +93,10 @@ User.checkIfExist = (email,phone) => {
     ]);
 }
 
-User.checkIfPhoneExist = (phone) => {
+User.findByPhone = (phone) => {
     const sql = `
         SELECT
-            COUNT(*)
+            telefono
         FROM
             ${table_name}
         WHERE
@@ -107,7 +108,20 @@ User.checkIfPhoneExist = (phone) => {
     ]);
 }
 
-User.findByid = (id, callback) => {
+User.setToken = (id, token) => {
+    const sql = `
+        UPDATE
+            ${table_name}
+        SET
+            session_token = $2
+        WHERE   
+            id = $1
+    `;
+
+    return db.none(sql, [id, token]);
+}
+
+User.findById = (id, callback) => {
     const sql = `
     SELECT
 	U.id,
