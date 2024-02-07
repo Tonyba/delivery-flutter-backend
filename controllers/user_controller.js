@@ -4,6 +4,23 @@ const User = require('../models/user');
 const Rol = require('../models/rol');
 const jwt = require('jsonwebtoken');
 const storage  = require('../helpers/cloud_storage');
+
+ 
+async function getAllRepartidores(req, res = response , next) {
+    try {
+        const data = await User.findRepartidores();
+
+        return res.json(data);
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            msg: 'USER: GET_ALL_REPARTIDORES server error'
+        });
+    }
+} 
+
  
 async function getAll(req, res = response , next) {
     try {
@@ -319,6 +336,21 @@ async function login(req, res= response, next) {
     }
 }
 
+async function checkToken(req, res) {
+    try {
+
+        res.json({
+            success: true
+        })
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            msg: 'CHECKTOKEN: server error'
+        });
+    }
+}
 
 
 module.exports = {
@@ -328,5 +360,7 @@ module.exports = {
     login,
     findByid,
     updateUser,
-    logout
+    logout,
+    checkToken,
+    getAllRepartidores
 }

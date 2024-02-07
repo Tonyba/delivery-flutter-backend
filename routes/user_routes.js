@@ -1,5 +1,5 @@
 const passport = require('passport');
-const { getAll, login, findByid, registerWithImg, updateUser, logout } = require('../controllers/user_controller');
+const { getAll, login, findByid, registerWithImg, updateUser, logout, checkToken, getAllRepartidores } = require('../controllers/user_controller');
 const { validarCampos } = require('../middlewares/validar-campos')
 const { check } = require('express-validator');
 const router = require('express').Router();
@@ -7,7 +7,9 @@ const router = require('express').Router();
 const upload = require('../helpers/upload');
 
 router.get('/', getAll);
+router.get('/deliverymen', passport.authenticate('jwt', {session: false}), getAllRepartidores)
 router.get('/findById/:id',  passport.authenticate('jwt', {session: false}) ,findByid);
+router.get('/checkToken', passport.authenticate('jwt', {session: false}), checkToken);
 
 router.post('/register', [
     check('user.*.nombre', 'El nombre es obligatorio').not().isEmpty(),

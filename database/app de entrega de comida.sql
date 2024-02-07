@@ -14,7 +14,7 @@ CREATE TABLE "usuario" (
 
 CREATE TABLE "usuario_roles" (
   "usuario_id" BIGSERIAL NOT NULL,
-  "role_id" BIGSERIAL NOT NULL,
+  "role_id" BIGINT NOT NULL,
   "created_at" timestamp(0) NOT NULL,
   "updated_at" timestamp(0) NOT NULL
 );
@@ -30,7 +30,7 @@ CREATE TABLE "roles" (
 
 CREATE TABLE "direcciones_usuario" (
   "id" BIGSERIAL PRIMARY KEY,
-  "id_usuario" BIGSERIAL NOT NULL,
+  "id_usuario" BIGINT NOT NULL,
   "direccion" varchar(255) NOT NULL,
   "direccion2" varchar(255),
   "lat" float NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE "direcciones_usuario" (
 DROP TABLE IF EXISTS productos;
 CREATE TABLE "productos" (
   "id" BIGSERIAL PRIMARY KEY,
-  "id_categoria" BIGSERIAL,
+  "id_categoria" BIGINT,
   "nombre" varchar(255) NOT NULL,
   "precio" float NOT NULL,
   "precio_descuento" float,
@@ -70,32 +70,41 @@ CREATE TABLE "categorias" (
 
 CREATE TABLE "pedidos" (
   "id" BIGSERIAL PRIMARY KEY,
-  "id_usuario" BIGSERIAL NOT NULL,
-  "id_repartidor" BIGSERIAL NOT NULL,
-  "id_direccion" BIGSERIAL NOT NULL,
+  "id_usuario" BIGINT NOT NULL,
+  "id_repartidor" BIGINT NULL,
+  "id_direccion" BIGINT NOT NULL,
   "total" float NOT NULL,
   "estado" varchar NOT NULL DEFAULT '1',
-  "tiempo_entrega" timestamp NOT NULL,
+  "tiempo_entrega" timestamp,
+  "lat" DECIMAL DEFAULT 0,
+  "lng" DECIMAL DEFAULT 0,
+  "timestamp" BIGINT NOT NULL,
   "date_created" timestamp(0) NOT NULL,
-  "updated_at" timestamp(0) NOT NULL
+  "updated_at" timestamp(0) NOT NULL,
+  FOREIGN KEY(id_usuario) REFERENCES usuario(id) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY(id_repartidor) REFERENCES usuario(id) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY(id_direccion) REFERENCES direcciones_usuario(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE "pedido_producto" (
-  "pedido_id" BIGSERIAL NOT NULL,
-  "producto_id" BIGSERIAL NOT NULL,
+  "pedido_id" BIGINT NOT NULL,
+  "producto_id" BIGINT NOT NULL,
   "cantidad" integer NOT NULL,
   "date_created" timestamp(0) NOT NULL,
-  "updated_at" timestamp(0) NOT NULL
+  "updated_at" timestamp(0) NOT NULL,
+  PRIMARY KEY(pedido_id, producto_id),
+  FOREIGN KEY ("pedido_id") REFERENCES "pedidos" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
+  FOREIGN KEY ("producto_id") REFERENCES "productos" ("id");
 );
 
 CREATE TABLE "reviews" (
   "id" BIGSERIAL PRIMARY KEY,
-  "pedido_id" BIGSERIAL NOT NULL,
-  "usuario_id" BIGSERIAL NOT NULL,
+  "pedido_id" BIGINT NOT NULL,
+  "usuario_id" BIGINT NOT NULL,
   "rating" integer NOT NULL DEFAULT 0,
   "texto" varchar(255),
   "created_at" timestamp(0) NOT NULL,
-  "updated_at" timestamp(0) NOT NULL
+  "updated_at" timestamp(0) NOT NULL,
 );
 
 COMMENT ON COLUMN "pedidos"."estado" IS '
@@ -114,17 +123,7 @@ ALTER TABLE "productos" ADD FOREIGN KEY ("id_categoria") REFERENCES "categorias"
 
 ALTER TABLE "productos_imagenes" ADD FOREIGN KEY ("producto_id") REFERENCES "productos" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE "pedido_producto" ADD FOREIGN KEY ("pedido_id") REFERENCES "pedidos" ("id");
-
-ALTER TABLE "producto" ADD FOREIGN KEY ("id") REFERENCES "pedido_producto" ("producto_id");
-
-ALTER TABLE "pedidos" ADD FOREIGN KEY ("id_usuario") REFERENCES "usuario" ("id");
-
-ALTER TABLE "pedidos" ADD FOREIGN KEY ("id_repartidor") REFERENCES "usuario" ("id");
-
-ALTER TABLE "direcciones_usuario" ADD FOREIGN KEY ("id_usuario") REFERENCES "usuario" ("id");
-
-ALTER TABLE "pedidos" ADD FOREIGN KEY ("id_direccion") REFERENCES "direcciones_usuario" ("id");
+ALTER TABLE "direcciones_usuario" ADD FOREIGN KEY ("id_usuario") REFERENCES "usuario" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE "usuario_roles" ADD FOREIGN KEY ("role_id") REFERENCES "roles" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
 
@@ -150,7 +149,7 @@ INSERT INTO roles(
   "updated_at"
 )
 VALUES(
-  'RESTAURENTE',
+  'RESTAURANTE',
   'restaurant/orders/list',
   '2024-01-15',
   '2024-01-15'

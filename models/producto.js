@@ -105,4 +105,18 @@ Producto.create = (producto) => {
     ]); 
 }
 
+Producto.getById = (id) => {
+
+    const sql = `
+        SELECT
+            precio
+        FROM
+            ${table_name}
+        WHERE
+            id = $1
+    `;
+
+    return db.oneOrNone(sql, id);
+}
+
 module.exports = Producto;

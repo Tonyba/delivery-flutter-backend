@@ -15,6 +15,48 @@ User.getAll = () => {
     return db.manyOrNone(sql);
 }
 
+User.findRepartidores = () => {
+    const sql = `
+    SELECT
+        U.id,
+        U.correo,
+        U.nombre,
+        U.apellido,
+        U.imagen,
+        U.telefono,
+        U.password,
+        U.session_token,
+        JSON_AGG(
+            json_build_object(
+                'id', R.id,
+                'nombre', R.nombre,
+                'ruta', R.ruta,
+                'imagen', R.imagen
+            )
+        ) as Roles
+    FROM
+        ${table_name} AS U
+
+    INNER JOIN
+        usuario_roles AS UR
+    ON
+        UR.usuario_id = U.id
+    
+    INNER JOIN
+        roles as R
+    ON
+        R.id = UR.role_id
+        
+    WHERE
+        R.id = 3
+
+    GROUP BY
+		U.id
+    `;
+
+    return db.manyOrNone(sql);
+}
+
 User.create = (user) => {
     const sql = `
         INSERT INTO 

@@ -6,6 +6,8 @@ require('dotenv').config()
 const userRoutes = require('./routes/user_routes');
 const categoriaRoutes = require('./routes/categoria_routes');
 const productoRoutes = require('./routes/producto_routes');
+const addressRoutes = require('./routes/address_routes');
+const pedidosRoutes = require('./routes/pedidos_routes');
 
 const app = express();
 const admin = require('firebase-admin');
@@ -16,8 +18,6 @@ const session = require('express-session');
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
-
-
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -45,7 +45,8 @@ app.disable('x-powered-by');
 app.use('/api/user', userRoutes);
 app.use('/api/category', categoriaRoutes);
 app.use('/api/product', productoRoutes);
-
+app.use('/api/address', addressRoutes);
+app.use('/api/order', pedidosRoutes);
 
 app.listen(process.env.PORT, () => {
     console.log('server on port ' + process.env.PORT);
