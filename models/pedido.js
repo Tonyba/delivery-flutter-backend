@@ -4,6 +4,167 @@ const Pedidos = {};
 
 const table_name = 'pedidos';
 
+Pedidos.getPedidosClienteAndEstado = (id_usuario, estado) => {
+    const sql = `
+        SELECT
+            P.id,
+            P.id_usuario,
+            P.id_direccion,
+            P.id_repartidor,
+            P.estado,
+            P.timestamp,
+            JSON_AGG(
+                JSON_BUILD_OBJECT(
+                    'id', PROD.id,
+                    'nombre', PROD.nombre,
+                    'precio', PROD.precio,
+                    'imagen', PROD.imagen,
+                    'descripcion', PROD.descripcion,
+                    'quantity', PP.cantidad
+                )
+            ) as productos,
+            JSON_BUILD_OBJECT(
+                'id', U.id,
+                'nombre', U.nombre,
+                'apellido', U.apellido,
+                'imagen', U.imagen
+            ) AS cliente,
+            JSON_BUILD_OBJECT(
+                'id', U2.id,
+                'nombre', U2.nombre,
+                'apellido', U2.apellido,
+                'imagen', U2.imagen
+            ) AS repartidor,
+            JSON_BUILD_OBJECT(
+                'id', D.id,
+                'direccion', D.direccion,
+                'direccion2', D.direccion2,
+                'lat', D.lat,
+                'lng', D.lng
+            ) AS direccion
+        FROM
+            ${table_name} AS P
+        INNER JOIN
+            usuario AS U
+        ON
+            P.id_usuario = U.id
+
+        LEFT JOIN
+            usuario AS U2
+        ON
+            P.id_repartidor = U2.id
+
+        INNER JOIN
+            direcciones_usuario AS D
+        ON
+            D.id = P.id_direccion
+
+        INNER JOIN
+            pedido_producto AS PP
+        ON
+            PP.pedido_id = P.id
+
+        INNER JOIN
+            productos AS PROD
+        ON
+            PROD.id = PP.producto_id
+        
+        WHERE
+            estado = $2
+        AND
+            P.id_usuario = $1
+
+        GROUP BY
+            P.id,
+            U.id,
+            U2.id,
+            D.id
+    `;
+
+return db.manyOrNone(sql, [id_usuario, estado]);
+}
+
+
+Pedidos.getPedidosAsignadosAndEstado = (id_repartidor, estado) => {
+    const sql = `
+        SELECT
+            P.id,
+            P.id_usuario,
+            P.id_direccion,
+            P.id_repartidor,
+            P.estado,
+            P.timestamp,
+            JSON_AGG(
+                JSON_BUILD_OBJECT(
+                    'id', PROD.id,
+                    'nombre', PROD.nombre,
+                    'precio', PROD.precio,
+                    'imagen', PROD.imagen,
+                    'descripcion', PROD.descripcion,
+                    'quantity', PP.cantidad
+                )
+            ) as productos,
+            JSON_BUILD_OBJECT(
+                'id', U.id,
+                'nombre', U.nombre,
+                'apellido', U.apellido,
+                'imagen', U.imagen
+            ) AS cliente,
+            JSON_BUILD_OBJECT(
+                'id', U2.id,
+                'nombre', U2.nombre,
+                'apellido', U2.apellido,
+                'imagen', U2.imagen
+            ) AS repartidor,
+            JSON_BUILD_OBJECT(
+                'id', D.id,
+                'direccion', D.direccion,
+                'direccion2', D.direccion2,
+                'lat', D.lat,
+                'lng', D.lng
+            ) AS direccion
+        FROM
+            ${table_name} AS P
+        INNER JOIN
+            usuario AS U
+        ON
+            P.id_usuario = U.id
+
+        LEFT JOIN
+            usuario AS U2
+        ON
+            P.id_repartidor = U2.id
+
+        INNER JOIN
+            direcciones_usuario AS D
+        ON
+            D.id = P.id_direccion
+
+        INNER JOIN
+            pedido_producto AS PP
+        ON
+            PP.pedido_id = P.id
+
+        INNER JOIN
+            productos AS PROD
+        ON
+            PROD.id = PP.producto_id
+        
+        WHERE
+            estado = $2
+        AND
+            P.id_repartidor = $1
+
+        GROUP BY
+            P.id,
+            U.id,
+            U2.id,
+            D.id
+    `;
+
+return db.manyOrNone(sql, [id_repartidor, estado]);
+}
+
 
 Pedidos.findByStatus = (estado) => {
 
